@@ -1,17 +1,5 @@
-import PilotMap from './PilotMap'
+import EvidenceReview from './EvidenceReview'
 import './App.css'
-
-const sample = {
-  baselineWait: 20,
-  pilotWait: 17,
-  baselineCrowding: 48,
-  pilotCrowding: 39,
-}
-
-const waitChange =
-  ((sample.baselineWait - sample.pilotWait) / sample.baselineWait) * 100
-const crowdingChange =
-  sample.baselineCrowding - sample.pilotCrowding
 
 function App() {
   return (
@@ -54,38 +42,15 @@ function App() {
           <div><strong>Human review</strong><span>Continue · Revise · Stop</span></div>
         </section>
 
-        <section className="metrics" aria-label="Sample outcomes">
-          <article className="metric-card">
-            <span className="eyebrow">AVERAGE WAIT · SAMPLE</span>
-            <strong>{sample.baselineWait} → {sample.pilotWait} min</strong>
-            <span className="metric-positive">{waitChange}% less waiting</span>
-            <p>Illustrative baseline and pilot values. Target: at least 15%.</p>
-          </article>
-          <article className="metric-card">
-            <span className="eyebrow">CROWDED TRIPS · SAMPLE</span>
-            <strong>{sample.baselineCrowding}% → {sample.pilotCrowding}%</strong>
-            <span className="metric-positive">
-              {crowdingChange} percentage points lower
-            </span>
-            <p>Sample shares, not evidence of fewer crashes.</p>
-          </article>
-          <article className="metric-card">
-            <span className="eyebrow">EVIDENCE STATUS</span>
-            <strong>Sample only</strong>
-            <span className="metric-neutral">Local verification pending</span>
-            <p>Corridor, operator and participating drivers are unconfirmed.</p>
-          </article>
-        </section>
-
-        <PilotMap />
+        <EvidenceReview />
 
         <section className="principles">
           <h2>Conditions before a real pilot</h2>
           <div className="principle-grid">
             <p><strong>Drivers:</strong> voluntary paid participation and a right to correct reports.</p>
             <p><strong>Safety:</strong> independent hazard verification and authority closure.</p>
-            <p><strong>Privacy:</strong> route and time aggregates only; no individual scoring.</p>
-            <p><strong>Shadow clause:</strong> no reuse of driver knowledge for surveillance or autonomous training without fresh worker approval, payment and income protection.</p>
+            <p><strong>Privacy:</strong> route and time aggregates only; no individual scoring; limited access and retention.</p>
+            <p><strong>Shadow clause:</strong> driver-contributed safety or route knowledge cannot be reused for employment surveillance, insurance/licensing scores or autonomous training without fresh worker approval, payment and an income-protecting transition. Declining a pilot cannot cost a driver a route or job.</p>
           </div>
         </section>
       </main>
