@@ -21,6 +21,7 @@ const initial: Evidence[] = [
   { wait: '20', waitSamples: '100', trips: '100', crowded: '48', breakdowns: '3', hazards: '2', response: '45', responseSamples: '4', unresolved: '2', falsePositives: '1', burden: '20', drivers: '10' },
   { wait: '17', waitSamples: '100', trips: '100', crowded: '39', breakdowns: '2', hazards: '3', response: '30', responseSamples: '5', unresolved: '1', falsePositives: '2', burden: '30', drivers: '10' },
 ]
+const dailyCountFields: readonly (keyof Evidence)[] = ['trips', 'crowded', 'breakdowns', 'hazards', 'responseSamples', 'falsePositives']
 const budgetLabels = ['Paid driver participation', 'Telemetry equipment', 'Connectivity', 'Independent hazard verification', 'Case review and closure', 'Contingency']
 const money = (value: number | null) => value === null ? insufficient : `MXN $${format(value)}`
 
@@ -47,6 +48,8 @@ export default function EvidenceReview() {
       <article className="metric-card"><span className="eyebrow">AVERAGE WAIT · SAMPLE EVIDENCE</span>
         <strong>{waits.map(value => value === null ? insufficient : format(value)).join(' → ')} min</strong>
         <span>{reduction === null ? insufficient : `${format(Math.abs(reduction))}% ${reduction >= 0 ? 'less' : 'more'} waiting`}</span>
+        {parsed[0].wait === 0 && <p>Baseline wait was explicitly entered as 0 minutes, not left missing. Insufficient data for a percentage change: the formula divides by baseline wait, and division by zero is undefined.</p>}
+        {evidence[0].wait.trim() === '' && <p>Baseline wait is missing. Enter a sample value to calculate a percentage change.</p>}
         <p>Proposed 15% wait target: {reduction === null ? insufficient : reduction >= 15 ? 'Met in sample data' : 'Not met in sample data'}. This is not an automatic decision.</p>
       </article>
       <article className="metric-card"><span className="eyebrow">CROWDED TRIPS · SAMPLE EVIDENCE</span>
@@ -60,6 +63,7 @@ export default function EvidenceReview() {
     <section className="principles" aria-labelledby="evidence-heading">
       <h2 id="evidence-heading">Editable aggregate evidence · Sample data</h2>
       <p>Unconfirmed three-stop Atizapán corridor · Morning peak, 08:00–09:00 local time, both windows. Real comparisons require matching sampling methods and verified coverage.</p>
+      <p>Editable sample inputs have no verified source. Even fields labeled “verified” describe invented examples, not verified real-world evidence.</p>
       <p>Enter nonnegative numbers within the displayed limits; counts must be whole numbers. Blank fields mean missing evidence. No personal data.</p>
       <div className="evidence-grid">{evidence.map((row, index) => <fieldset key={index}>
         <legend>{index === 0 ? 'Baseline · 14 days' : 'Pilot · 30 days'} · Sample data</legend>
@@ -67,15 +71,19 @@ export default function EvidenceReview() {
           const value = parsed[index][field.key]
           const exceedsTrips = field.key === 'crowded' && value !== null && parsed[index].trips !== null && value > parsed[index].trips!
           const invalid = (row[field.key] !== '' && value === null) || exceedsTrips
+          const days = index === 0 ? 14 : 30
+          const dailyRate = ratio(invalid ? null : value, days)
           return <label key={field.key}>{field.label} <small>(0–{format(field.max)}{field.integer ? ', whole numbers' : ''})</small>
             <input type="number" min="0" max={field.max} step={field.integer ? '1' : 'any'} value={row[field.key]} aria-invalid={invalid} onChange={event => setEvidence(previous => previous.map((entry, i) => i === index ? { ...entry, [field.key]: event.target.value } : entry))} />
             {invalid ? <small className="error">{exceedsTrips ? 'Crowded trips cannot exceed observed trips.' : 'Enter a valid number within the stated range.'}</small> : value === null ? <small>{insufficient}</small> : null}
+            {dailyCountFields.includes(field.key) && <small>Sample per-day rate: {dailyRate === null ? insufficient : `${format(dailyRate)} per day (${format(value!)} ÷ ${days} days)`}</small>}
+            {field.key === 'unresolved' && <small>Open-case count at the end of this window; not a daily event rate.</small>}
           </label>
         })}
         <p>Response time: {ratio(parsed[index].response, parsed[index].responseSamples) === null ? insufficient : `${format(parsed[index].response!)} minutes`}.</p>
         <p>Burden per participating driver: {ratio(parsed[index].burden, parsed[index].drivers) === null ? insufficient : `${format(ratio(parsed[index].burden, parsed[index].drivers)!)} hours`}.</p>
       </fieldset>)}</div>
-      <p>Unresolved cases remain visible above. Conflicting reports and telemetry require human review, an assigned case owner, independent hazard verification and authority closure. Counts across 14 and 30 days are not directly comparable as rates.</p>
+      <p>Unresolved cases remain visible above. Conflicting reports and telemetry require human review, an assigned case owner, independent hazard verification and authority closure. Per-day rates divide event counts by the full 14-day baseline or 30-day pilot window, assuming coverage on every day in the same morning time slot. Coverage is unverified. Raw counts span unequal periods; rates alone do not establish comparable exposure or show that the pilot caused a change.</p>
     </section>
     <section className="principles" aria-labelledby="budget-heading"><h2 id="budget-heading">Itemized pilot budget · Sample MXN costs</h2>
       <div className="budget-grid">{budget.map((raw, index) => <label key={budgetLabels[index]}>{budgetLabels[index]} (MXN, 0–10,000,000)
@@ -83,12 +91,13 @@ export default function EvidenceReview() {
         {costs[index] === null && <small className="error">{raw === '' ? insufficient : 'Enter a valid nonnegative cost within the limit.'}</small>}
       </label>)}</div>
       <p><strong>Total: {money(total)}</strong> · Cost per observed pilot trip: {money(perTrip)}</p>
-      <p>Payer unconfirmed. MX$2 fare increase and six-month extension are unapproved scenarios.</p>
+      <p>The payer and enforcement process remain unconfirmed. MX$2 fare increase and six-month extension are unapproved scenarios.</p>
     </section>
     <section className="principles" aria-labelledby="decision-heading"><h2 id="decision-heading">Human decision · Sample review</h2>
       <p>The reviewer weighs evidence, costs and driver burden. No automated dispatch, subsidy or penalty.</p>
       <form onSubmit={event => { event.preventDefault(); setAttempted(true); if (decisionOk && reasonOk) setSaved({ decision, reason: reason.trim() }) }} noValidate>
-        <label>Decision<select value={decision} onChange={event => setDecision(event.target.value)} aria-invalid={attempted && !decisionOk}><option value="">Choose a human decision</option>{['Continue', 'Revise', 'Stop'].map(value => <option key={value}>{value}</option>)}</select></label>
+        <label>Decision<select value={decision} aria-describedby="revise-help" onChange={event => setDecision(event.target.value)} aria-invalid={attempted && !decisionOk}><option value="">Choose a human decision</option>{['Continue', 'Revise', 'Stop'].map(value => <option key={value} value={value}>{value === 'Revise' ? 'Revise — request changes before approving a real pilot' : value}</option>)}</select></label>
+        <p id="revise-help"><strong>Revise:</strong> request changes before approving a real pilot.</p>
         {attempted && !decisionOk && <p className="error">Choose Continue, Revise or Stop.</p>}
         <label>Reason (required, 10–500 characters after trimming; no personal data)<textarea value={reason} onChange={event => setReason(event.target.value)} aria-invalid={attempted && !reasonOk} rows={4} /></label>
         <small>{reason.trim().length} / 500 characters</small>
@@ -96,7 +105,7 @@ export default function EvidenceReview() {
         <button type="submit">Record human decision</button>
       </form>
       {saved && <div role="status"><h3>Recorded sample decision: {saved.decision}</h3><p>{saved.reason}</p><p>This records the review at save time. Later evidence edits require a fresh review and save.</p></div>}
-      <p>Edits and the recorded decision live only in React memory in this browser tab. Reloading clears them; nothing is sent or saved to a database.</p>
+      <p>This browser-only decision is a temporary demo record, not an official audit record. Edits and the recorded decision live only in React memory in this browser tab. Reloading clears them; nothing is sent or saved to a database.</p>
     </section>
   </>
 }

@@ -7,3 +7,13 @@
 - Validation actually run: Stage 4 `npm run build` and `npm run lint` passed after correcting a nested-hook implementation error identified by lint. Stage 5 final `npm run build`, `npm run lint`, and `node --test tests/evidence.test.mjs` passed (5 tests).
 - Remaining verification: desktop/mobile browser layout, animation and tile-failure behavior; actual form interactions, keyboard navigation and reload reset; signed-out production access. No browser automation was available or run in this session. The real corridor, payer, operator, sampling comparability and data governance still require confirmation. No validated real-world ML accuracy is claimed.
 - Next move: run local browser acceptance checks before any authorized deployment. No deployment or push performed, as explicitly requested. Do not fabricate a bug or persona finding for the later assignment stages.
+
+## Week 7 simulated reviewer usability follow-up — 2026-09-24
+
+- Used the supplied simulated 52-year-old reviewer feedback for one focused improvement: clarify how to interpret evidence before choosing Revise. Documented seven review screens/sections and the resulting simulated Revise decision in `docs/PERSONA_TEST.md`; no real participant, transcript, official decision or successful browser retest is claimed.
+- Explained Revise beside the selection. Explicit baseline wait 0 now has a division-by-zero explanation distinct from a blank field; the default remains 20 minutes and unavailable comparisons still say “Insufficient data.”
+- Added sample per-day rates beside trip, crowded-trip, breakdown, verified-hazard, responded-case and false-positive counts using 14/30 days. Labeled the unverified daily coverage assumption and cautioned against raw-count comparisons and causation. Unresolved cases are an end-of-window backlog, not an event rate.
+- Made unverified input sources, unconfirmed payer/enforcement process and temporary, unofficial browser record status explicit. Existing pilot boundaries, session-only state and shadow clause remain intact.
+- Checks actually run: `node --test tests/evidence.test.mjs` (5 passed), `npm run lint` (passed), `npm run build` (passed), and `git diff --check` (passed). No failures occurred in these checks. Browser rendering, interaction and persona retesting remain unverified.
+- Delivery: user authorized one commit and a push to main; no deployment is authorized. The pre-existing `.gitignore` addition for `.vercel` is left untouched and excluded from this commit.
+- Next move: verify the revised copy, zero-versus-missing state and daily-rate presentation in a local desktop/mobile browser before any separately authorized deployment.
